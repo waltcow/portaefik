@@ -1,0 +1,67 @@
+version: "3.9"
+services:
+  app:
+    container_name: logto_app
+    depends_on:    
+      postgres:
+        condition: service_healthy
+    image: svhd/logto:${TAG-latest}
+    entrypoint: ["sh", "-c", "npm start"]
+    # entrypoint: ["sh", "-c", "npm run cli db alteration deploy next"]
+    environment:
+      - TRUST_PROXY_HEADER=1
+      - DB_URL=postgres://postgres:p0stgr3s@postgres:5432/logto_app      
+      - ENDPOINT=https://auth.example.com
+      - ADMIN_ENDPOINT=https://auth-admin.example.com
+      - REDIS_URL=redis://redis
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.www-router.rule=Host(`auth.example.com`)
+      - traefik.http.routers.www-router.tls=true
+      - traefik.http.routers.www-router.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.www-router.service=www-service
+      - traefik.http.services.www-service.loadbalancer.server.port=3001
+      
+      - traefik.http.routers.admin-router.rule=Host(`auth-admin.example.com`)
+      - traefik.http.routers.admin-router.tls=true
+      - traefik.http.routers.admin-router.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.admin-router.service=admin-service
+      - traefik.http.services.admin-service.loadbalancer.server.port=3002
+
+    networks:
+      - traefik            
+    
+  postgres:
+    image: postgres:15-alpine
+    container_name: logto_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: p0stgr3s      
+    volumes:
+      - pg_data:/var/lib/postgresql/data      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5   
+    networks:
+      - traefik      
+      
+  redis:
+    container_name: logto_redis
+    image: redis:7.2.1-alpine3.18
+    volumes:
+      - redis_data:/data   
+    networks:
+      - traefik        
+      
+volumes:
+  pg_data:  
+  redis_data:
+      
+networks:
+  traefik:
+    external: true   
+
+      
