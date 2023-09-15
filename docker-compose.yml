@@ -24,9 +24,11 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       # SSL configuration
-      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
+      #- "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
+      #- "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       #- "--certificatesresolvers.letsencryptresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencryptresolver.acme.email=youremail@domain.tld"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json"
       # Global HTTP -> HTTPS
@@ -34,6 +36,9 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       # Enable dashboard
       - "--api.dashboard=true"
+    environment:
+      - "CF_API_EMAIL="
+      - "CF_API_KEY="      
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
