@@ -13,6 +13,7 @@ services:
       - ./letsencrypt:/letsencrypt
       - ./users.u:/users/users.u
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime      
     restart: unless-stopped
     command:
       #- "--log.level=DEBUG"
@@ -63,6 +64,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /data/portaefik/portainer-data:/data
+      - /etc/localtime:/etc/localtime      
     restart: unless-stopped
 
 networks:
