@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  proxy:
+  traefik:
     image: traefik:v3.0
     container_name: "traefik"
     networks:
@@ -10,8 +10,7 @@ services:
       - "80:80" # HTTP
       - "443:443" # HTTPS
     volumes:
-      - ./letsencrypt:/letsencrypt
-      - ./users.u:/users/users.u
+      - ./letsencrypt:/letsencrypt      
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime      
     restart: unless-stopped
@@ -29,7 +28,8 @@ services:
       #- "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       #- "--certificatesresolvers.letsencryptresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
       - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge=true"
-      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge.provider=cloudflare"
+      # aliyun -> alidns
+      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge.provider=cloudflare" 
       - "--certificatesresolvers.letsencryptresolver.acme.email=youremail@domain.tld"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json"
       # Global HTTP -> HTTPS
@@ -39,14 +39,16 @@ services:
       - "--api.dashboard=true"
     environment:
       - "CF_API_EMAIL="
-      - "CF_API_KEY="      
+      - "CF_API_KEY="
+      - "ALICLOUD_ACCESS_KEY="
+      - "ALICLOUD_SECRET_KEY="
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencryptresolver"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
-      - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/users/users.u"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_USER_PWD_HASH}"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.domain.tld`)"
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
 
